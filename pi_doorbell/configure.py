@@ -5,7 +5,7 @@
 #   Written by:               Josh.5 (josh@streamingtech.tv)
 #   Date:                     04 February, 2018 (09:02:57)
 #   Last Modified by:         Josh.5 
-#                             on 04 February, 2018 (10:05:20)
+#                             on 04 February, 2018 (10:53:08)
 #
 #   Copyright:
 #          Copyright (C) StreamingTech LTD. - All Rights Reserved
@@ -67,6 +67,19 @@ class Configure():
                 dict1[option] = None;
         return dict1;
 
+    def writeDefaultConfig(self):
+        home            = os.path.expanduser("~");
+        conf_file       = os.path.join(home, '.pi_doorbell', 'config.ini');
+        conf_dir        = os.path.dirname(conf_file);
+        if not os.path.exists(conf_dir):
+            os.makedirs(conf_dir);
+        for section in DEFAULT_CONFIG.keys():
+            self.Config.add_section(section);
+            for key in DEFAULT_CONFIG[section].keys():
+                self.Config.set(section, key, DEFAULT_CONFIG[section][key]);
+        with open(conf_file, 'w') as f:
+            self.Config.write(f);
+
     def getConfig(self):
         self._config    = DEFAULT_CONFIG;
         home            = os.path.expanduser("~");
@@ -77,6 +90,8 @@ class Configure():
             for x in sections:
                     configdic = self.configSectionMap(x);
                     self._config[x] = configdic;
+        else:
+            self.writeDefaultConfig();
         return self._config;
 
     def formatString(self, string):
