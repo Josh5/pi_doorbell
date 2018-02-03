@@ -103,3 +103,23 @@ Now when your Pi starts you will have Home-Assistant running on port 8123.
 
 ---
 
+
+
+#### Pi Doorbell Service:
+
+
+##### Install Pi Doorbell Service:
+
+Start by cloning this repo or downloading the latest source.
+
+```
+git clone https://github.com/Josh5/pi_doorbell.git
+```
+
+
+Now install the python module.
+
+```
+cd pi_doorbell
+sudo python ./setup.py install
+```
