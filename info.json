@@ -1,0 +1,12 @@
+{
+    "name":"pi_doorbell",
+    "version":"0.1",
+    "description":"Raspberry Pi Doorbell",
+    "author":"Josh.5",
+    "email":"josh@streamingtech.tv",
+    "description":"Activate notifications to Home-Assistant connected devices when you doorbell is pressed.",
+    "disclaimer":"",
+    "forum":"",
+    "video":"",
+    "website":"http://streamingtech.tv/"
+}

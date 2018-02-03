@@ -1,0 +1,11 @@
+[General]
+debugging=true
+use_pin=26
+door_name=Front
+family_name=Humans
+
+[HomeAssistant]
+host=localhost
+port=8123
+api_password=false
+media_players=false
