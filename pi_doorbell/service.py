@@ -5,7 +5,7 @@
 #   Written by:               Josh.5 (josh@streamingtech.tv)
 #   Date:                     04 February, 2018 (08:14:45)
 #   Last Modified by:         Josh.5 
-#                             on 04 February, 2018 (10:33:59)
+#                             on 04 February, 2018 (11:09:16)
 #
 #   Copyright:
 #          Copyright (C) StreamingTech LTD. - All Rights Reserved
@@ -35,7 +35,7 @@ class Service():
         if self.config['General']['debugging']: # Force debugging if set to true in user config
             self.debug  = True
         self.notify     = notify.Notify(config=self.config, debug=self.debug);
-        self.use_pin    = self.config['General']['use_pin'];
+        self.use_pin    = int(self.config['General']['use_pin']);
         if not test_run:
             GPIO.setmode(GPIO.BOARD);
             GPIO.setup(self.use_pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN);
@@ -56,6 +56,8 @@ class Service():
         if test_run:
             self.logging("Service running in test mode.");
             count = 0;
+        else:
+            self.logging("Service running.");
         while True:
             if test_run:
                 if count > 10 and count % 10 == 0:
@@ -88,7 +90,7 @@ class Service():
 
 
 def main():
-    service = Service(debug=True);
+    service = Service(debug=False);
     service.run();
 
 
