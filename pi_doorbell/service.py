@@ -5,7 +5,7 @@
 #   Written by:               Josh.5 (josh@streamingtech.tv)
 #   Date:                     04 February, 2018 (08:14:45)
 #   Last Modified by:         Josh.5 
-#                             on 04 February, 2018 (11:09:16)
+#                             on 04 February, 2018 (13:03:04)
 #
 #   Copyright:
 #          Copyright (C) StreamingTech LTD. - All Rights Reserved
@@ -16,9 +16,6 @@
 
 import os, time
 
-
-home = os.path.expanduser("~")
-
 try:
     import RPi.GPIO as GPIO
     test_run = False
@@ -26,6 +23,19 @@ except:
     test_run = True
 
 import configure, notify
+
+import logging
+logging.basicConfig(level=logging.DEBUG)
+
+def _log(message, level="info"):
+    import logging
+    message = "Pi Doorbell - %s" % message
+    if level == "debug":
+        logging.debug(message);
+    elif level == "info":
+        logging.info(message);
+    elif level == "warning":
+        logging.warning(message);
 
 class Service():
     def __init__(self, debug):
@@ -42,12 +52,13 @@ class Service():
 
     def logging(self, message):
         if self.debug:
-            timestr = time.strftime("%Y%m%d-%H%M%S")
-            message = "[%s] %s" % (timestr, message)
-            print(message)
+            timestr = time.strftime("%Y%m%d-%H%M%S");
+            message = "[%s] %s" % (timestr, message);
+            _log(message);
 
     def handle(self):
         string = self.Configure.returnRandomString();
+        self.logging("Sending notification %s" % string);
         self.notify.send(string);
 
     def run(self):

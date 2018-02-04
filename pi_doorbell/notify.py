@@ -5,7 +5,7 @@
 #   Written by:               Josh.5 (josh@streamingtech.tv)
 #   Date:                     03 February, 2018 (16:30:18)
 #   Last Modified by:         Josh.5 
-#                             on 04 February, 2018 (10:16:42)
+#                             on 04 February, 2018 (13:02:05)
 #
 #   Copyright:
 #          Copyright (C) StreamingTech LTD. - All Rights Reserved
@@ -17,6 +17,18 @@
 
 import json, time, sys, requests, cookielib
 
+import logging
+logging.basicConfig(level=logging.DEBUG)
+
+def _log(message, level="info"):
+    import logging
+    message = "Pi Doorbell - %s" % message
+    if level == "debug":
+        logging.debug(message);
+    elif level == "info":
+        logging.info(message);
+    elif level == "warning":
+        logging.warning(message);
 
 class Notify():
     def __init__(self,config,timeout=20,debug=False):
@@ -54,10 +66,10 @@ class Notify():
     def log(self, string):
         if self.debug:
             try:
-                print '[Notify]: %s' % string
+                _log( '[Notify]: %s' % string );
             except UnicodeEncodeError:
                 bom = unicode(codecs.BOM_UTF8, 'utf8')
-                print '[Notify]: %s' % string.replace(bom, '')
+                _log( '[Notify]: %s' % string.replace(bom, '') );
             except:
                 pass
 
@@ -97,10 +109,8 @@ class Notify():
         url         = self.BASE_URL + "api/services/tts/google_say";
         if self.MEDIA_PLAYERS:
             players = [x.strip() for x in self.MEDIA_PLAYERS.split(',')]
-            print players
             for player in players:
                 send_data   = {"entity_id":"media_player."+player,"message":message};
-                print send_data
                 data        = json.dumps(send_data);
                 res         = False
                 try:
@@ -120,7 +130,6 @@ def test():
     import configure
     conf    = configure.Configure(debug=True);
     CONFIG  = conf.getConfig();
-    print CONFIG
     notify = Notify(config=CONFIG, debug=True);
     notify.send("Testing connection for Pi Doorbell Notifications");
 

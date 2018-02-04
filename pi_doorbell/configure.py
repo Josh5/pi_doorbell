@@ -5,7 +5,7 @@
 #   Written by:               Josh.5 (josh@streamingtech.tv)
 #   Date:                     04 February, 2018 (09:02:57)
 #   Last Modified by:         Josh.5 
-#                             on 04 February, 2018 (12:21:10)
+#                             on 04 February, 2018 (13:02:08)
 #
 #   Copyright:
 #          Copyright (C) StreamingTech LTD. - All Rights Reserved
@@ -56,7 +56,18 @@ except ImportError:
     PARSER_TYPE_INT = 'int'
 
 
+import logging
+logging.basicConfig(level=logging.DEBUG)
 
+def _log(message, level="info"):
+    import logging
+    message = "Pi Doorbell - %s" % message
+    if level == "debug":
+        logging.debug(message);
+    elif level == "info":
+        logging.info(message);
+    elif level == "warning":
+        logging.warning(message);
 
 def parse_args():
     """Function to handle building and parsing of command line arguments"""
@@ -117,10 +128,8 @@ class Configure():
                 elif value.lower() == 'false':
                     value = False;
                 dict1[option] = value;
-                if dict1[option] == -1:
-                    DebugPrint("skip: %s" % option);
             except:
-                print("exception on %s!" % option);
+                _log("exception on %s!" % option);
                 dict1[option] = None;
         return dict1;
 
@@ -163,5 +172,5 @@ class Configure():
 
 if __name__ == '__main__':
     config = Configure(debug=True);
-    print config.getConfig();
-    print config.returnRandomString();
+    _log(config.getConfig());
+    _log(config.returnRandomString());
