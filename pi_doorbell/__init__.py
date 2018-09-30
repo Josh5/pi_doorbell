@@ -1,8 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###################################################################################################
 #
-#   Written by:               Josh.5 (josh@streamingtech.tv)
+#   Written by:               Josh.5 (jsunnex@gmail.com)
 #   Date:                     21 February, 2017 (11:11:50)
 #   Last Modified by:         Josh.5 
 #                             on 04 February, 2018 (08:24:42)
@@ -16,16 +16,13 @@
 
 # Dummy file to make this directory a package.
 
-from __future__ import absolute_import
 import warnings
 
 
 from .service import Service
 
-
-
-__author__ = 'Josh.5 (josh@streamingtech.tv)'
-__version__ = '1.0'
+from .version import __author__
+from .version import __version__
 
 __all__ = (
     'Service',

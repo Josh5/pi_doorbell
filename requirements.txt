@@ -1,1 +1,3 @@
 requests>=2.18.4
+gtts>=2.0.1
+pychromecast>=2.3.0

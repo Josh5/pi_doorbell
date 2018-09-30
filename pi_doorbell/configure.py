@@ -1,8 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###################################################################################################
 #
-#   Written by:               Josh.5 (josh@streamingtech.tv)
+#   Written by:               Josh.5 (jsunnex@gmail.com)
 #   Date:                     04 February, 2018 (09:02:57)
 #   Last Modified by:         Josh.5 
 #                             on 04 February, 2018 (13:02:08)
@@ -14,34 +14,43 @@
 #
 ###################################################################################################
 
-import ConfigParser
+import configparser
 
 import sys, os, random
 
+from .version import __version__
 
 
 
 NOTIFICATION_STRINGS = [
     "There is someone at the {!door_name} door.",
     "Oh my! You have a visitor. How exciting!",
-    "Hooray! We have company. I do love a social gathering. Please introduce me wont you {!family_name}.",
+    "Hooray! We have company. I do love a social gathering. Please introduce me will you {!family_name}.",
     "{!family_name}, I have detected an unknown entity at the {!door_name} door.",
+    "{!family_name}, there seems to be a fello human at our {!door_name} door.",
+    "{!family_name}, there is someone at the door. I would get it myself, but unfortunately Google has not designed me with mobility in mind.",
+    "Knock knock! Who's there? Well why don't you go to the {!door_name} door and see.",
 ]
 
 CONFIG_LOCATION = os.path.join('/', 'etc', 'pi_doorbell', 'config.ini');
 
 DEFAULT_CONFIG = {
+    'Args': {},
     'General': {
         'debugging': False,
         'use_pin': '26',
         'door_name': '',
         'family_name': 'Humans'
     },
-    'HomeAssistant': {
-        'host': 'localhost',
-        'port': '8123',
-        'api_password': False,
-        "media_players":False
+    'WebServer': {
+        'host': '0.0.0.0',
+        'port': '8001',
+        'mp3_cache': '/tmp/pi_doorbell',
+        'tts_language': 'en-NZ'
+    },
+    'ChromeCast': {
+        'filters_by_device_name': '',
+        'filters_by_model': ''
     }
 }
 
@@ -86,6 +95,10 @@ def parse_args():
                         help='Show the version number and exit');
     parser.add_argument('-d', '--debug', dest='debugging', action='store_true',
                         help='Run with debugging enabled', default=False);
+    parser.add_argument('-w', '--no-web-server', dest='no_web_server', action='store_true',
+                        help='Disable the web server', default=False);
+    parser.add_argument('-s', '--no-service', dest='no_service', action='store_true',
+                        help='Disable the daemon service', default=False);
     parser.add_argument('-c', '--config_file', type=PARSER_TYPE_STR,
                         help='Specify a config file location. Default is "/etc/pi_doorbell/config.ini"');
 
@@ -107,9 +120,10 @@ def parse_args():
 class Configure():
     def __init__(self, debug=False):
         self.debug      = debug;
-        self.Config     = ConfigParser.ConfigParser();
+        self.Config     = configparser.ConfigParser();
         self._config    = {};
         self.args       = parse_args();
+        self._config['Args'] = self.args;
         if self.args.debugging:
             self.debug  = True;
         self.conf_file  = CONFIG_LOCATION;
@@ -137,9 +151,9 @@ class Configure():
         conf_dir        = os.path.dirname(self.conf_file);
         if not os.path.exists(conf_dir):
             os.makedirs(conf_dir);
-        for section in DEFAULT_CONFIG.keys():
+        for section in list(DEFAULT_CONFIG.keys()):
             self.Config.add_section(section);
-            for key in DEFAULT_CONFIG[section].keys():
+            for key in list(DEFAULT_CONFIG[section].keys()):
                 self.Config.set(section, key, DEFAULT_CONFIG[section][key]);
         with open(self.conf_file, 'w') as f:
             self.Config.write(f);
@@ -171,6 +185,6 @@ class Configure():
 
 
 if __name__ == '__main__':
-    config = Configure(debug=True);
+    config = Configure();
     _log(config.getConfig());
     _log(config.returnRandomString());

@@ -5,9 +5,8 @@ import fnmatch
 import json
 
 
-print sys.version_info
-if not sys.version_info[:2] == (2, 7):
-    print("This module version requires Python 2.7.")
+if sys.version_info[0] < 3:
+    print("This module version requires Python 3.")
     sys.exit(1)
 
 from setuptools import setup, find_packages
@@ -24,8 +23,7 @@ module_classifiers = [
     versioninfo.dev_status(),
     'Intended Audience :: End Users/Desktop',
     'Intended Audience :: Developers',
-    'Programming Language :: Python :: 2',
-    'Programming Language :: Python :: 2.7',
+    'Programming Language :: Python :: 3',
     'Operating System :: Android',
     'Operating System :: POSIX :: Linux',
     'Operating System :: Unix',

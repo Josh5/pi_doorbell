@@ -3,6 +3,8 @@ import os
 import sys
 import json
 
+import pi_doorbell.version as version_info
+
 __MODULE_VERSION = None
 __MODULE_NAME    = None
 __MODULE_AUTHOR  = None
@@ -10,48 +12,36 @@ __MODULE_EMAIL   = None
 __MODULE_URL     = None
 __MODULE_DESC    = None
 
-def read_json_info():
-    info = {}
-    for root, dirs, files in os.walk(os.getcwd()):
-        for name in files:
-            if "info.json" in name:
-                # open config and read
-                info_file =  os.path.join(root, name)
-                with open(info_file) as info_json: 
-                    info = json.load(info_json)
-                return info
-    return info
-
 
 def name():
     global __MODULE_NAME
-    __MODULE_NAME = str(read_json_info()["name"])
+    __MODULE_NAME = str(version_info.read_info()["name"])
     return __MODULE_NAME
 
 
 def version():
     global __MODULE_VERSION
-    __MODULE_VERSION = read_json_info()["version"]
+    __MODULE_VERSION = version_info.read_info()["version"]
     return __MODULE_VERSION
 
 def description():
     global __MODULE_DESC
-    __MODULE_DESC = str(read_json_info()["description"])
+    __MODULE_DESC = str(version_info.read_info()["description"])
     return __MODULE_DESC
 
 def author():
     global __MODULE_AUTHOR
-    __MODULE_AUTHOR = str(read_json_info()["author"])
+    __MODULE_AUTHOR = str(version_info.read_info()["author"])
     return __MODULE_AUTHOR
 
 def email():
     global __MODULE_EMAIL
-    __MODULE_EMAIL = str(read_json_info()["email"])
+    __MODULE_EMAIL = str(version_info.read_info()["email"])
     return __MODULE_EMAIL
 
 def url():
     global __MODULE_URL
-    __MODULE_URL = str(read_json_info()["website"])
+    __MODULE_URL = str(version_info.read_info()["website"])
     return __MODULE_URL
 
 

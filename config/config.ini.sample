@@ -1,11 +1,20 @@
 [General]
-debugging=true
+debugging=false
 use_pin=26
 door_name=Front
 family_name=Humans
 
-[HomeAssistant]
-host=localhost
-port=8123
-api_password=false
-media_players=false
+[WebServer]
+host=0.0.0.0
+port=8001
+mp3_cache=/tmp/pi_doorbell
+tts_language=en-us
+
+[ChromeCast]
+; Set a comma separated list of chromecast device filters based on device name or model
+; Leave blank to disable this filter
+; Examples:
+; filters_by_device_name=Living Room speaker, TV Room
+; filters_by_model=Google Home, Chromecast
+filters_by_device_name=
+filters_by_model=Google Home
