@@ -1,7 +1,7 @@
 
 
 __name          = "pi_doorbell"
-__version       = "2.0"
+__version       = "2.1"
 __description   = "Raspberry Pi Doorbell Notifications Service for Home-Assistant"
 __author        = "Josh.5"
 __email         = "jsunnex@gmail.com"

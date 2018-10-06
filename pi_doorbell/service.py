@@ -14,8 +14,7 @@
 #
 ###################################################################################################
 
-import os, time, socket, threading
-from http.server import HTTPServer, BaseHTTPRequestHandler, SimpleHTTPRequestHandler
+import os, time
 
 try:
     import RPi.GPIO as GPIO
@@ -43,20 +42,31 @@ def _log(message, level="info"):
 class Service():
     def __init__(self):
         # Fetch configuration
-        self.Configure  = configure.Configure();
-        self.config     = self.Configure.getConfig();
-        self.debug      = False
+        self.Configure                  = configure.Configure();
+        self.config                     = self.Configure.getConfig();
+        self.debug                      = False
         if self.config['General']['debugging']: # Force debugging if set to true in user config
-            self.debug  = True
+            self.debug                  = True
 
         # Setup notifications to chromecast devices
-        self.notify     = notify.Notify(config=self.config, debug=self.debug);
+        self.notify                     = notify.Notify(config=self.config, debug=self.debug);
 
         # Configure the GPIO to monitor. If not GPIO is available, service will switch to "test_run" mode which will trigger every TRIGGER_DELAY sec.
-        self.use_pin    = int(self.config['General']['use_pin']);
+        self.use_pin                    = int(self.config['General']['use_pin']);
+        self.pin_pull_up                = int(self.config['General']['pin_pull_up']);
+        self.post_trigger_delay         = int(self.config['General']['post_trigger_delay']);
         if not test_run:
             GPIO.setmode(GPIO.BOARD);
-            GPIO.setup(self.use_pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN);
+            if self.pin_pull_up:
+                GPIO.setup(self.use_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP);
+                self.pin_trigger        = "HIGH";
+                self.pin_default        = "LOW";
+                self.pin_default_value  = 0;
+            else:
+                GPIO.setup(self.use_pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN);
+                self.pin_trigger        = "LOW";
+                self.pin_default        = "HIGH";
+                self.pin_default_value  = 1;
         self.web_server = None;
 
     def logging(self, message):
@@ -80,6 +90,8 @@ class Service():
         host = self.config['WebServer']['host'];
         port = int(self.config['WebServer']['port']);
         if not self.web_server:
+            from http.server import HTTPServer, SimpleHTTPRequestHandler
+            import threading
             web_server = HTTPServer((host, port), SimpleHTTPRequestHandler);
             self.web_server = threading.Thread(target=web_server.serve_forever);
             self.web_server.daemon = True
@@ -119,16 +131,22 @@ class Service():
                         count += 1;
                     else:
                         state = GPIO.input(self.use_pin);
-                    if state:
+                    if state == self.pin_default_value:
                         if old_state != state:
                             old_state = state;
-                            self.logging("Input was set to HIGH");
+                            self.logging("Input was reset back to default value: %s" % self.pin_default);
                     else:
                         if old_state != state:
                             old_state = state;
-                            self.logging("Input was set to LOW");
+                            self.logging("Input was set to %s" % self.pin_trigger);
                             self.handle();
-                            while not state: # Loop while state still held high
+                            if self.post_trigger_delay:
+                                post_trigger_delay_count = 0;
+                                self.logging("Executing a post trigger delay of %s seconds" % self.post_trigger_delay);
+                                while post_trigger_delay_count != self.post_trigger_delay: # Loop to add delay while processing state change
+                                    time.sleep(1);
+                                    post_trigger_delay_count += 1;
+                            while state != self.pin_default_value: # Loop while state still held high
                                 if test_run:
                                     if count % 10 == 0:
                                         state = 0;

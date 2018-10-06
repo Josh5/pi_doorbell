@@ -15,10 +15,8 @@
 ###################################################################################################
 
 
-import os, sys, json, time, socket, hashlib, requests, http.cookiejar
+import os
 
-import pychromecast
-from gtts import gTTS
 
 import logging
 logging.basicConfig(level=logging.DEBUG)
@@ -51,11 +49,13 @@ class Notify():
 
     def discover_devices(self):
         self.log("Discovering ChromeCast devices...");
+        import pychromecast
         self.chromecasts = pychromecast.get_chromecasts();
         for cast in self.chromecasts:
             self.log("Found device: %s" % cast.device.friendly_name);
 
     def send(self, message = ""):
+        import socket, hashlib
         port         = self.config['WebServer']['port'];
         cache_dir    = self.config['WebServer']['mp3_cache'];
         tts_language = self.config['WebServer']['tts_language'];
@@ -64,6 +64,7 @@ class Notify():
         mp3_file  = hashlib.md5(message.encode('utf-8')).hexdigest() + "_" + tts_language + ".mp3";
         mp3_path  = os.path.join(cache_dir, mp3_file);
         if not os.path.isfile(mp3_path):
+            from gtts import gTTS
             # No cached copy, create a new one with Google's TTS API
             self.log('Generating MP3: %s' % mp3_file);
             tts = gTTS(text=message, lang=tts_language);

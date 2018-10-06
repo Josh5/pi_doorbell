@@ -39,6 +39,8 @@ DEFAULT_CONFIG = {
     'General': {
         'debugging': False,
         'use_pin': '26',
+        'pin_pull_up': True,
+        'post_trigger_delay': '1',
         'door_name': '',
         'family_name': 'Humans'
     },
