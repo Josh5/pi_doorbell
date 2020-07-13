@@ -48,7 +48,7 @@ DEFAULT_CONFIG = {
     'WebServer': {
         'host': '0.0.0.0',
         'port': '8001',
-        'mp3_cache': '/tmp/pi_doorbell',
+        'mp3_cache': '/var/lib/pi_doorbell/www',
         'tts_language': 'en-NZ'
     },
     'ChromeCast': {

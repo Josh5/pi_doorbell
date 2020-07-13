@@ -131,6 +131,11 @@ python3 ./setup.py build
 sudo python3 ./setup.py install
 ```
 
+Restart the process to have changes come into effect
+```
+sudo systemctl restart pi_doorbell
+```
+
 
 
 ## Debugging
