@@ -18,5 +18,6 @@ tts_language = en-us
 ; Examples:
 ; filters_by_device_name = Living Room speaker, TV Room
 ; filters_by_model = Google Home, Chromecast
+enable_chromecast = false
 filters_by_device_name =
 filters_by_model = Google Home

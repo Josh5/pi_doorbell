@@ -51,6 +51,7 @@ DEFAULT_CONFIG = {
         'tts_language': 'en-NZ'
     },
     'ChromeCast': {
+        'enable_chromecast': True,
         'filters_by_device_name': '',
         'filters_by_model': ''
     }
@@ -66,19 +67,16 @@ except ImportError:
     from optparse import SUPPRESS_HELP as ARG_SUPPRESS
     PARSER_TYPE_INT = 'int'
 
-
 import logging
-logging.basicConfig(level=logging.DEBUG)
-
+from pi_doorbell import logger
+log = logger.get_logger("configure")
 def _log(message, level="info"):
-    import logging
-    message = "Pi Doorbell - %s" % message
     if level == "debug":
-        logging.debug(message);
+        log.debug(message);
     elif level == "info":
-        logging.info(message);
+        log.info(message);
     elif level == "warning":
-        logging.warning(message);
+        log.warning(message);
 
 def parse_args():
     """Function to handle building and parsing of command line arguments"""

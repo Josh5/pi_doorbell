@@ -16,46 +16,47 @@
 
 
 import os
-
+import socket
+import hashlib
+import pychromecast
+from gtts import gTTS
 
 import logging
-logging.basicConfig(level=logging.DEBUG)
-
+from pi_doorbell import logger
+log = logger.get_logger("notify")
 def _log(message, level="info"):
-    import logging
-    message = "Pi Doorbell - %s" % message
     if level == "debug":
-        logging.debug(message);
+        log.debug(message);
     elif level == "info":
-        logging.info(message);
+        log.info(message);
     elif level == "warning":
-        logging.warning(message);
+        log.warning(message);
 
 class Notify():
     def __init__(self, config, debug=False):
         self.debug          = debug;
         self.config         = config;
-        self.chromecasts    = None;
+        self.chromecasts    = [];
 
     def log(self, string):
         if self.debug:
             try:
-                _log( '[Notify]: %s' % string );
+                _log( string );
             except UnicodeEncodeError:
                 bom = str(codecs.BOM_UTF8, 'utf8')
-                _log( '[Notify]: %s' % string.replace(bom, '') );
+                _log( string.replace(bom, '') );
             except:
                 pass
 
     def discover_devices(self):
         self.log("Discovering ChromeCast devices...");
-        import pychromecast
-        self.chromecasts = pychromecast.get_chromecasts();
-        for cast in self.chromecasts:
+        chromecasts, browser = pychromecast.get_chromecasts()
+        pychromecast.discovery.stop_discovery(browser)
+        for cast in chromecasts:
+            self.chromecasts.append(cast)
             self.log("Found device: %s" % cast.device.friendly_name);
 
     def send(self, message = ""):
-        import socket, hashlib
         port         = self.config['WebServer']['port'];
         cache_dir    = self.config['WebServer']['mp3_cache'];
         tts_language = self.config['WebServer']['tts_language'];
@@ -64,7 +65,6 @@ class Notify():
         mp3_file  = hashlib.md5(message.encode('utf-8')).hexdigest() + "_" + tts_language + ".mp3";
         mp3_path  = os.path.join(cache_dir, mp3_file);
         if not os.path.isfile(mp3_path):
-            from gtts import gTTS
             # No cached copy, create a new one with Google's TTS API
             self.log('Generating MP3: %s' % mp3_file);
             tts = gTTS(text=message, lang=tts_language);
@@ -91,12 +91,15 @@ class Notify():
         # Send url to chromecast devices
         self.chromecast(url);
 
-        self.log("Message Sent to ChromeCast device(s)");
         return True;
     
     def chromecast(self, url):
-        filters_by_device_name = self.config['ChromeCast']['filters_by_device_name'];
-        filters_by_model       = self.config['ChromeCast']['filters_by_model'];
+        chromecast_config = self.config['ChromeCast']
+        if not chromecast_config.get('enable_chromecast', True):
+            self.log("(ChromeCast) Device not enabled");
+            return;
+        filters_by_device_name = chromecast_config['filters_by_device_name'];
+        filters_by_model       = chromecast_config['filters_by_model'];
         device_names           = [x.strip() for x in filters_by_device_name.split(',')];
         model_names            = [x.strip() for x in filters_by_model.split(',')];
         if not self.chromecasts:
@@ -112,18 +115,7 @@ class Notify():
             if send:
                 cast.wait()
                 cast.media_controller.play_media(url, 'audio/mp3')
+        self.log("Message Sent to ChromeCast device(s)");
         return;
 
 
-
-
-def test():
-    import configure
-    conf    = configure.Configure();
-    CONFIG  = conf.getConfig();
-    notify = Notify(config=CONFIG, debug=True);
-    notify.send("Testing connection for Pi Doorbell Notifications");
-
-
-if __name__ == '__main__':
-    test();

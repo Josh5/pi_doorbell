@@ -33,7 +33,7 @@ sudo apt-get install -y \
 Start by cloning this repo or downloading the latest source.
 
 ```
-git clone https://github.com/Josh5/pi_doorbell.git
+git clone https://github.com/Josh5/pi_doorbell.git /opt/pi_doorbell
 ```
 
 

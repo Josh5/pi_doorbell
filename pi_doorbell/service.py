@@ -23,21 +23,18 @@ except:
     test_run = True
     TRIGGER_DELAY = 10
 
-from . import configure, notify
+from pi_doorbell import configure, notify, webserver
 
+from pi_doorbell import logger
 import logging
-logging.basicConfig(level=logging.DEBUG)
-
+log = logger.get_logger("service")
 def _log(message, level="info"):
-    import logging
-    message = "Pi Doorbell - %s" % message
     if level == "debug":
-        logging.debug(message);
+        log.debug(message);
     elif level == "info":
-        logging.info(message);
+        log.info(message);
     elif level == "warning":
-        logging.warning(message);
-
+        log.warning(message);
 
 class Service():
     def __init__(self):
@@ -45,8 +42,13 @@ class Service():
         self.Configure                  = configure.Configure();
         self.config                     = self.Configure.getConfig();
         self.debug                      = False
+
+        # Configure logger
+        log_level                       = logging.INFO
         if self.config['General']['debugging']: # Force debugging if set to true in user config
             self.debug                  = True
+            log_level                   = logging.DEBUG
+        logger.set_log_handler_config(log_level)
 
         # Setup notifications to chromecast devices
         self.notify                     = notify.Notify(config=self.config, debug=self.debug);
@@ -55,6 +57,9 @@ class Service():
         self.use_pin                    = int(self.config['General']['use_pin']);
         self.pin_pull_up                = int(self.config['General']['pin_pull_up']);
         self.post_trigger_delay         = int(self.config['General']['post_trigger_delay']);
+        self.pin_trigger                = "LOW";
+        self.pin_default                = "HIGH";
+        self.pin_default_value          = 1
         if not test_run:
             GPIO.setmode(GPIO.BOARD);
             if self.pin_pull_up:
@@ -67,55 +72,47 @@ class Service():
                 self.pin_trigger        = "LOW";
                 self.pin_default        = "HIGH";
                 self.pin_default_value  = 1;
-        self.web_server = None;
+        
+        # Configure default web server status
+        self.web_server      = None;
+        self.doorbell        = webserver.DoorbellStatus()
+        self.doorbell.status = 'off';
 
-    def logging(self, message):
-        if self.debug:
-            timestr = time.strftime("%Y%m%d-%H%M%S");
-            message = "[%s] %s" % (timestr, message);
-            _log(message);
-
-    def handle(self):
+    def handle_event(self):
         string = self.Configure.returnRandomString();
-        self.logging('Sending notification: "%s"' % string);
+        _log('Sending notification: "%s"' % string);
         self.notify.send(string);
-            
-    def setup_webserver_dir(self):
-        cache_dir = self.config['WebServer']['mp3_cache'];
-        if not os.path.exists(cache_dir):
-            os.makedirs(cache_dir);
-        os.chdir(cache_dir);
+        self.set_doorbell_status('on');
+
+    def reset_event(self):
+        self.set_doorbell_status('off');
             
     def run_webserver(self):
-        host = self.config['WebServer']['host'];
-        port = int(self.config['WebServer']['port']);
         if not self.web_server:
-            from http.server import HTTPServer, SimpleHTTPRequestHandler
-            import threading
-            web_server = HTTPServer((host, port), SimpleHTTPRequestHandler);
-            self.web_server = threading.Thread(target=web_server.serve_forever);
-            self.web_server.daemon = True
-            self.web_server.start();
-            self.logging("Web Server Started - %s:%s" % (host, port));
+            self.web_server = webserver.HttpServer(config=self.config)
+            self.web_server.start()
+            self.web_server.setDoorbellStatus('off')
             
     def stop_webserver(self):
-            self.web_server.shutdown()
-            self.web_server.server_close()
-            self.logging("Web Server Stopped - %s:%s" % (host, port));
+        self.web_server.stop();
+        _log("Web Server Stopped");
+            
+    def set_doorbell_status(self, status):
+        webserver.DoorbellStatus.status = status
+        _log("Setting web status to: %s" % status);
 
     def run(self):
         old_state   = 1;
         state       = 0;
         # Check if this is run a as a test server or on a raspi
         if test_run:
-            self.logging("Service running in test mode.");
+            _log("Service running in test mode.");
             count = 0;
         else:
-            self.logging("Service running.");
+            _log("Service running.");
 
         # Start the webserver
         if not self.Configure.args.no_web_server:
-            self.setup_webserver_dir();
             self.run_webserver();
 
         # Run the service
@@ -134,15 +131,16 @@ class Service():
                     if state == self.pin_default_value:
                         if old_state != state:
                             old_state = state;
-                            self.logging("Input was reset back to default value: %s" % self.pin_default);
+                            _log("Input was reset back to default value: %s" % self.pin_default);
+                            self.reset_event();
                     else:
                         if old_state != state:
                             old_state = state;
-                            self.logging("Input was set to %s" % self.pin_trigger);
-                            self.handle();
+                            _log("Input was set to %s" % self.pin_trigger);
+                            self.handle_event();
                             if self.post_trigger_delay:
                                 post_trigger_delay_count = 0;
-                                self.logging("Executing a post trigger delay of %s seconds" % self.post_trigger_delay);
+                                _log("Executing a post trigger delay of %s seconds" % self.post_trigger_delay);
                                 while post_trigger_delay_count != self.post_trigger_delay: # Loop to add delay while processing state change
                                     time.sleep(1);
                                     post_trigger_delay_count += 1;
@@ -157,7 +155,7 @@ class Service():
                                 time.sleep(1);
                 time.sleep(1);
         except KeyboardInterrupt:
-            pass
+            self.stop_webserver()
 
 
 
