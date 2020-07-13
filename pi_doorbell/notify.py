@@ -18,6 +18,7 @@
 import os
 import socket
 import hashlib
+import datetime
 import pychromecast
 from gtts import gTTS
 
@@ -34,9 +35,10 @@ def _log(message, level="info"):
 
 class Notify():
     def __init__(self, config, debug=False):
-        self.debug          = debug;
-        self.config         = config;
-        self.chromecasts    = [];
+        self.debug                      = debug;
+        self.config                     = config;
+        self.chromecasts                = [];
+        self.chromecasts_rescan_time    = None
 
     def log(self, string):
         if self.debug:
@@ -55,6 +57,7 @@ class Notify():
         for cast in chromecasts:
             self.chromecasts.append(cast)
             self.log("Found device: %s" % cast.device.friendly_name);
+        self.chromecasts_rescan_time = datetime.datetime.now() + datetime.timedelta(minutes=30)
 
     def send(self, message = ""):
         port         = self.config['WebServer']['port'];
@@ -103,6 +106,9 @@ class Notify():
         device_names           = [x.strip() for x in filters_by_device_name.split(',')];
         model_names            = [x.strip() for x in filters_by_model.split(',')];
         if not self.chromecasts:
+            self.discover_devices();
+        elif datetime.datetime.now() > self.chromecasts_rescan_time:
+            self.log("Time to check for device changes...");
             self.discover_devices();
         receivers_list = [];
         for cast in self.chromecasts:
