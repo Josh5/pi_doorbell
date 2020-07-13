@@ -1,3 +1,4 @@
-requests>=2.22.0
+requests>=2.24.0
 gtts>=2.1.1
 pychromecast>=7.1.1
+setuptools>=49.2.0

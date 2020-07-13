@@ -5,48 +5,64 @@ The setup scripts and run scripts for running my DIY doorbell notifications from
 This is designed to run on a Debian based operating system. I used Rasbian with a Raspberry Pi B. You may need to change a few things in order to get it working with other Raspberry Pi models.
 
 
-# Setup:
+## Setup:
 
-#### Dependencies:
+### Install dependencies:
 
 Start by install all dependencies first.
 ```
-sudo apt-get update
-sudo apt-get upgrade -y
 sudo apt-get install -y \
-    openssh-server \
     git \
     python3 \
     python3-rpi.gpio \
     python3-pip
+
+sudo python3 -m pip install -r requirements.txt
 ```
 
 ---
 
 
 
-#### Pi Doorbell Notifications Service:
+### Build and install from source:
 
+Clone this repo or download the latest source.
 
-##### Install Pi Doorbell Notifications:
-
-Start by cloning this repo or downloading the latest source.
+eg.
 
 ```
 git clone https://github.com/Josh5/pi_doorbell.git /opt/pi_doorbell
 ```
 
 
-Now install the python module.
+Run the following commands to install the python module
 
 ```
-cd pi_doorbell
-python ./setup.py build
-sudo python ./setup.py install
+cd /opt/pi_doorbell
+python3 ./setup.py build
+sudo python3 ./setup.py install
 ```
 
 
-##### Add auto-startup script:
+
+### Configure pi_doorbell
+
+Start by copying the default config file. 
+
+```
+sudo mkdir -p /etc/pi_doorbell
+sudo cp -f /opt/pi_doorbell/config/config.ini.sample /etc/pi_doorbell/config.ini
+```
+
+Once this is installed, you can edit it to suit your needs.
+
+```
+sudo nano /etc/pi_doorbell/config.ini
+```
+
+
+
+### Create systemd unit
 
 Ideally, we want this to run on startup.
 
@@ -58,12 +74,12 @@ which pi_doorbell
 
 You should see an output something like this: " */usr/local/bin/pi_doorbell* "
 
-So we will create another systemd unit for the Pi Doorbell Notifications by running this command:
+So we will create systemd unit for the Pi Doorbell Notifications by running this command:
 ```
-sudo nano /etc/systemd/system/pi-doorbell.service
+sudo nano /lib/systemd/system/pi_doorbell.service
 ```
 
-Populate the unit file with this:
+Populate the unit file with the following text (changing the path to pi_doorbell according to what was returned above):
 
 ```
 [Unit]
@@ -82,10 +98,47 @@ StartLimitBurst=10
 
 [Install]
 WantedBy=multi-user.target
+
 ```
 
-Reload the systemd service and then enable the service to run it on start
+Enable the newly created systemd unit
 ```
-sudo systemctl --system daemon-reload
-sudo systemctl enable pi-doorbell.service
+sudo systemctl enable pi_doorbell.service
 ```
+
+Now the Pi Doorbell Notifications service will run whenever the RaspberryPi starts.
+
+To start it now without needing to reboot, run:
+```
+sudo systemctl restart pi_doorbell
+```
+
+
+
+## Update:
+
+To update, `cd` to the path where the pi_doorbell project was cloned.
+
+Run these commands:
+
+```
+cd /opt/pi_doorbell
+
+git checkout master .
+git pull origin master
+
+python3 ./setup.py build
+sudo python3 ./setup.py install
+```
+
+
+
+## Debugging
+
+If you run this as a systemd unit, you can tail the logs using `journalctl`
+```
+journalctl -u pi_doorbell -f
+```
+
+If you want to see more info, then edit the config file in `/etc/pi_doorbell/config.ini`, setting `debugging = true`.
+

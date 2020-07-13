@@ -23,6 +23,7 @@ from .version import __version__
 
 
 NOTIFICATION_STRINGS = [
+    "Great Scott! There is someone at the door.",
     "There is someone at the {!door_name} door.",
     "Oh my! You have a visitor. How exciting!",
     "Hooray! We have company. I do love a social gathering. Please introduce me will you {!family_name}.",
