@@ -14,7 +14,9 @@
 #
 ###################################################################################################
 
-import os, time
+import os 
+import time
+import threading
 
 try:
     import RPi.GPIO as GPIO
@@ -79,13 +81,28 @@ class Service():
         self.doorbell.status = 'off';
 
     def handle_event(self):
-        string = self.Configure.returnRandomString();
-        _log('Sending notification: "%s"' % string);
-        self.notify.send(string);
         self.set_doorbell_status('on');
+        self.send_notifications();
 
     def reset_event(self):
         self.set_doorbell_status('off');
+
+    def send_notifications(self, ):
+        # Send notifications
+        string = self.Configure.returnRandomString();
+        _log('Sending notification: "%s"' % string);
+        # Create thread
+        notify_thread_event = threading.Event()
+        notify_thread = threading.Thread(target=self.notify.send, args=(string,))
+        notify_thread.start()
+        # Wait for at most 60 seconds for the thread to complete.
+        notify_thread.join(60)
+        # Signal the event. Whether the thread has already finished or not.
+        notify_thread_event.set()
+        # Now join without a timeout knowing that the thread is either already 
+        # finished or will finish "soon."
+        notify_thread.join()
+        _log('Notification sent: "%s"' % string);
             
     def run_webserver(self):
         if not self.web_server:

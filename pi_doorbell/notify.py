@@ -92,15 +92,16 @@ class Notify():
         self.log('MP3 url: %s' % url);
 
         # Send url to chromecast devices
-        self.chromecast(url);
+        self.chromecast_play_notification(url)
 
         return True;
     
-    def chromecast(self, url):
+    def chromecast_play_notification(self, url):
         chromecast_config = self.config['ChromeCast']
         if not chromecast_config.get('enable_chromecast', True):
             self.log("(ChromeCast) Device not enabled");
             return;
+        self.log("Sending notification to ChromeCast device(s)");
         filters_by_device_name = chromecast_config['filters_by_device_name'];
         filters_by_model       = chromecast_config['filters_by_model'];
         device_names           = [x.strip() for x in filters_by_device_name.split(',')];
@@ -121,7 +122,7 @@ class Notify():
             if send:
                 cast.wait()
                 cast.media_controller.play_media(url, 'audio/mp3')
-        self.log("Message Sent to ChromeCast device(s)");
+        self.log("Notification sent to ChromeCast device(s)");
         return;
 
 
